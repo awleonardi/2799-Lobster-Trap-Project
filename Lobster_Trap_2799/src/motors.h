@@ -1,4 +1,4 @@
-#pragama once
+#pragma once
 
 void stop();
 void setEffort();

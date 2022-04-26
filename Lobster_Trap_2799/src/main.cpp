@@ -27,7 +27,7 @@ const unsigned int timeInterval = 1000;
 DFRobot_LCD lcd(16,2);  //16 characters and 2 lines of show
 char modeState = 0;
 char inputState = 0;
-long epoch_time = 1650952832; // Placeholder
+long epoch_time = 1651010613; // Placeholder
 long release_time = 0;
 long motor_timeout = 0;
 Bounce sw = Bounce();
@@ -102,8 +102,10 @@ void loop() {
 						lcd.print("Wait to cancel  ");
 					}
 					lcd.setCursor(0, 1);
-					lcd.print("04:20:00 4/20");	// Programmed release time
-
+					char buffer3[24];
+					(buffer3, "%02d:%02d:%02d %02d/%02d  ", hour(release_time), minute(release_time), second(release_time), month(release_time), day(release_time));
+					lcd.print(buffer3);
+				
 					if((millis() - millisDelay) > 5000){
 						inputState = 0;
 					}
@@ -227,7 +229,7 @@ void loop() {
 	// 		break;
 	// 	}
 	// }
-}
+	}
 }
 
 
@@ -240,7 +242,7 @@ void motorSetEfforts(bool speed, bool clockwise) {
     if (clockwise == true) {
       digitalWrite(DIR, HIGH);
     }
-    if (clockwise == false) {
+    else if (clockwise == false) {
       digitalWrite(DIR, LOW);
     }
   }
@@ -250,7 +252,7 @@ void motorSetEfforts(bool speed, bool clockwise) {
     if (clockwise == true) {
       digitalWrite(DIR, HIGH);
     }
-    if (clockwise == false) {
+    else if (clockwise == false) {
       digitalWrite(DIR, LOW);
     }
   }

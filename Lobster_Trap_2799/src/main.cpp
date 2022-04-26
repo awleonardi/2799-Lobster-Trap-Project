@@ -18,10 +18,11 @@
 const int STEP = 2;
 const int DIR = 3;
 
-void stop();
-void setEfforts_man(bool speed, bool clockwise);
+void motorStop();
+void motorSetEfforts(bool speed, bool clockwise);
 int val = 1;
 bool on = true;
+const unsigned int timeInterval = 1000;
 
 DFRobot_LCD lcd(16,2);  //16 characters and 2 lines of show
 char modeState = 0;
@@ -128,7 +129,18 @@ void loop() {
 			break;
 		}
 		case 1: { // Motor extend modeState
-			delay(2000); // Delay for motor
+			bool tooFarSwitch = digitalRead(1);
+			while(tooFarSwitch == false){
+				unsigned int startTime = micros();
+				unsigned int timeInterval = 1000;
+				while((micros() - startTime) < timeInterval){
+					motorSetEfforts(on, true);
+				}
+				on = !on;
+				tooFarSwitch = digitalRead(1);				
+			}
+
+			motorStop();
 			modeState = 2;
 			lcd.noDisplay();
 			lcd.setRGB(0, 0, 0);
@@ -154,79 +166,82 @@ void loop() {
 		}
 
 		case 3: { // Motor retract for release
-			delay(2000);	// Delay for motor
+			bool tooCloseSwitch = digitalRead(0);
+			while(tooCloseSwitch == false){
+				unsigned int startTime = micros();
+				unsigned int timeInterval = 1000;
+				while((micros() - startTime) < timeInterval){
+					motorSetEfforts(on, false);
+				}
+				on = !on;
+				tooCloseSwitch = digitalRead(0);				
+			}
+			motorStop();
 			modeState = 0;
 			break;
 		}
 		
 		
 		
-		case 4: { // Underwater modeState
-			bool switchState1 = digitalRead(7);
-			bool switchState2 = digitalRead(1);
-			if(switchState1 == true){
-				unsigned int startTime = micros();
-				unsigned int timeInterval = 1000;
-				while((micros() - startTime) < timeInterval){
-					setEfforts_man(on, true);
-				}
-				on = !on;
+	// 	case 4: { // Underwater modeState
+	// 		bool switchState1 = digitalRead(7);
+	// 		bool switchState2 = digitalRead(1);
+	// 		if(switchState1 == true){
+	// 			unsigned int startTime = micros();
+	// 			unsigned int timeInterval = 1000;
+	// 			while((micros() - startTime) < timeInterval){
+	// 				motorSetEfforts(on, true);
+	// 			}
+	// 			on = !on;
 				
-			}
-			else if(switchState2 == true){
-				unsigned int startTime = micros();
-				unsigned int timeInterval = 1000;
-				while((micros() - startTime) < timeInterval){
-					setEfforts_man(on, false);
-				}
-				on = !on;
-			}
-			else{
-				on = false;
-				setEfforts_man(on, false);
-			}
-			break;
-		}
-		case 5: { // Release idle modeState
-			sw.update();
-			lcd.setCursor(0, 0);
-			static int count = 0;
-			if(sw.fell()){
-				count++;
-			}
-			lcd.print(count);
+	// 		}
+	// 		else if(switchState2 == true){
+	// 			unsigned int startTime = micros();
+	// 			unsigned int timeInterval = 1000;
+	// 			while((micros() - startTime) < timeInterval){
+	// 				motorSetEfforts(on, false);
+	// 			}
+	// 			on = !on;
+	// 		}
+	// 		else{
+	// 			on = false;
+	// 			motorSetEfforts(on, false);
+	// 		}
+	// 		break;
+	// 	}
+	// 	case 5: { // Release idle modeState
+	// 		sw.update();
+	// 		lcd.setCursor(0, 0);
+	// 		static int count = 0;
+	// 		if(sw.fell()){
+	// 			count++;
+	// 		}
+	// 		lcd.print(count);
 
-			break;
-		}
+	// 		break;
+	// 	}
 		
-		default: {
-			modeState = 0; // Release in case of error
-			break;
-		}
-	}
+	// 	default: {
+	// 		modeState = 0; // Release in case of error
+	// 		break;
+	// 	}
+	// }
+}
 }
 
 
 
 
-void setEfforts_man(bool speed, bool clockwise) {
+void motorSetEfforts(bool speed, bool clockwise) {
 
   if (speed == true){
-
-    digitalWrite(STEP, HIGH);
-
+	digitalWrite(STEP, HIGH);
     if (clockwise == true) {
-
       digitalWrite(DIR, HIGH);
-
     }
-
     if (clockwise == false) {
-
       digitalWrite(DIR, LOW);
-
     }
-
   }
 
   else{
@@ -245,5 +260,11 @@ void setEfforts_man(bool speed, bool clockwise) {
 
     }
   }
+}
 
+
+
+void motorStop(){
+    digitalWrite(STEP, LOW);
+    digitalWrite(DIR, LOW);
 }

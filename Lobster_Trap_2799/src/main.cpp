@@ -63,7 +63,7 @@ void loop() {
 						info = localtime( &rawtime );
 						
 						lcd.setCursor(0, 0);
-						strftime(buffer, 17,"%H:%M:%S %b %d", info);
+						strftime(buffer, 17,"%H:%M:%S %b %d ", info);
 						lcd.print(buffer);
 						lcd.setCursor(0, 1);
 						sprintf(buffer2, "R_Encoder: %ld      ", encoderVal);
@@ -71,10 +71,11 @@ void loop() {
 						i = 0;
 					}
 					i++;
-					if(sw.rose()){		// rose should be on release
-						//inputState = 1;
+					if(sw.fell()){		// fell should be on release
+						inputState = 1;
 						millisDelay = millis();
 					}
+					break;
 				}
 				case 1: {	// Time confirmation
 					sw.update();
@@ -84,7 +85,7 @@ void loop() {
 					}
 					else{
 						lcd.setCursor(0, 0);
-						lcd.print("Wait to cancel");
+						lcd.print("Wait to cancel  ");
 					}
 					lcd.setCursor(0, 1);
 					lcd.print("04:20:00 4/20");	// Programmed release time
@@ -93,9 +94,10 @@ void loop() {
 						inputState = 0;
 					}
 
-					if(sw.rose()){
+					if(sw.fell()){
 						inputState = 2;
 					}
+					break;
 				}
 				case 2: {	// Proceed to underwater
 					lcd.setCursor(0, 0);
@@ -105,12 +107,13 @@ void loop() {
 					inputState = 0;
 					modeState = 0;
 
+					break;
 				}
 
 			}
 
 
-			
+			break;
 		}
 		case 1: { // Motor extend modeState
 			bool switchState1 = digitalRead(7);
@@ -132,6 +135,8 @@ void loop() {
 				lcd.setCursor(0, 2);
 				lcd.print(" ");
 			}
+
+			break;
 		}
 		case 2: { // Underwater modeState
 			bool switchState1 = digitalRead(7);
@@ -157,21 +162,24 @@ void loop() {
 				on = false;
 				setEfforts_man(on, false);
 			}
+			break;
 		}
 		case 3: { // Release idle modeState
 			sw.update();
 			lcd.setCursor(0, 0);
 			static int count = 0;
-			if(sw.rose()){
+			if(sw.fell()){
 				count++;
 			}
 			lcd.print(count);
 
-
+			break;
 		}
-		// default: {
-		// 	modeState = 0; // Release in case of error
-		// }
+		
+		default: {
+			modeState = 0; // Release in case of error
+			break;
+		}
 	}
 }
 

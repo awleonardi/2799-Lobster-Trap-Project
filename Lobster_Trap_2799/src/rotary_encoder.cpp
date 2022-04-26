@@ -6,12 +6,12 @@
 //   Good Performance: only the first pin has interrupt capability
 
 	
-Encoder myEnc(10, 9);
+Encoder myEnc(9, 10);
+long positionAbsolute = 0;
 
 
 long read_encoder_value() {	// returns value in epoch seconds
 	static long oldPosition  = -999;
-	static long positionAbsolute = 0;
 	long newPosition = myEnc.read();
 	
 	if (newPosition != oldPosition) {
@@ -25,4 +25,9 @@ long read_encoder_value() {	// returns value in epoch seconds
 	}
 
 	return positionAbsolute;
+}
+
+void reset_abs_pos(){
+	positionAbsolute = 0;
+	return;
 }

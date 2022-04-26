@@ -6,7 +6,7 @@
 
 #include "Wire.h"
 #include "DFRobot_LCD.h"
-#include <time.h>
+#include <TimeLib.h>
 #include <Bounce2.h>
 
 
@@ -26,7 +26,8 @@ bool on = true;
 DFRobot_LCD lcd(16,2);  //16 characters and 2 lines of show
 char modeState = 0;
 char inputState = 0;
-long epoch_time = 1650421475; // Placeholder
+long epoch_time = 1650952832; // Placeholder
+long release_time = 0;
 Bounce sw = Bounce();
 
 void setup() {
@@ -41,6 +42,8 @@ void setup() {
 	pinMode(DIR, OUTPUT);
 	digitalWrite(STEP, LOW);
 	digitalWrite(DIR, LOW);
+	setTime(epoch_time);
+	adjustTime((-4)*3600);
 }
 
 void loop() {
@@ -54,26 +57,35 @@ void loop() {
 					sw.update();
 					long encoderVal = read_encoder_value();
 					static int i = 0;
+					static bool saveTime = true;
+					static time_t sT;
+
+					if(saveTime){
+						sT = now();
+						saveTime = false;
+						reset_abs_pos();
+					}
+
 					if(i > 100){
-						time_t rawtime = epoch_time + encoderVal;
-						struct tm *info;
-						char buffer[17];
+						char buffer[24];
 						char buffer2[24];
-						time( &rawtime );
-						info = localtime( &rawtime );
 						
 						lcd.setCursor(0, 0);
-						strftime(buffer, 17,"%H:%M:%S %b %d ", info);
+						time_t cT = now();
+						sprintf(buffer,  "%02d:%02d:%02d %02d/%02d  ", hour(cT), minute(cT), second(cT), month(cT), day(cT));
+						sprintf(buffer2, "%02d:%02d:%02d %02d/%02d  ", hour(sT + encoderVal), minute(sT + encoderVal), second(sT + encoderVal), month(sT + encoderVal), day(sT + encoderVal));
 						lcd.print(buffer);
 						lcd.setCursor(0, 1);
-						sprintf(buffer2, "R_Encoder: %ld      ", encoderVal);
 						lcd.print(buffer2);
+						
 						i = 0;
 					}
 					i++;
 					if(sw.fell()){		// fell should be on release
 						inputState = 1;
 						millisDelay = millis();
+						saveTime = true;
+						release_time = sT + encoderVal;
 					}
 					break;
 				}
@@ -105,7 +117,7 @@ void loop() {
 					lcd.setCursor(0, 1);
 					lcd.print("Extending magnet");
 					inputState = 0;
-					modeState = 0;
+					modeState = 1;
 
 					break;
 				}
@@ -116,29 +128,40 @@ void loop() {
 			break;
 		}
 		case 1: { // Motor extend modeState
-			bool switchState1 = digitalRead(7);
-			bool switchState2 = digitalRead(1);
-			
-			if(switchState1 == true){
+			delay(2000); // Delay for motor
+			modeState = 2;
+			lcd.noDisplay();
+			lcd.setRGB(0, 0, 0);
+			break;
+		}
+		
+		case 2: { // Underwater modeState
+			time_t currentTime = now();
+			if(currentTime > release_time){
+				lcd.display();
+				lcd.setRGB(0, 0, 255);
 				lcd.setCursor(0, 0);
-				lcd.print("1");
+				lcd.print("Releasing!      ");
+				lcd.setCursor(0, 1);
+				lcd.print("Retracting mag  ");
+				modeState = 3;
 			}
-			if(switchState1 == false){
-				lcd.setCursor(0, 0);
-				lcd.print(" ");
-			}
-			if(switchState2 == true){
-				lcd.setCursor(0, 2);
-				lcd.print("2");
-			}
-			if(switchState2 == false){
-				lcd.setCursor(0, 2);
-				lcd.print(" ");
+			else{
+				delay(1000);
 			}
 
 			break;
 		}
-		case 2: { // Underwater modeState
+
+		case 3: { // Motor retract for release
+			delay(2000);	// Delay for motor
+			modeState = 0;
+			break;
+		}
+		
+		
+		
+		case 4: { // Underwater modeState
 			bool switchState1 = digitalRead(7);
 			bool switchState2 = digitalRead(1);
 			if(switchState1 == true){
@@ -164,7 +187,7 @@ void loop() {
 			}
 			break;
 		}
-		case 3: { // Release idle modeState
+		case 5: { // Release idle modeState
 			sw.update();
 			lcd.setCursor(0, 0);
 			static int count = 0;

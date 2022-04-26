@@ -29,6 +29,7 @@ char modeState = 0;
 char inputState = 0;
 long epoch_time = 1650952832; // Placeholder
 long release_time = 0;
+long motor_timeout = 0;
 Bounce sw = Bounce();
 
 void setup() {
@@ -119,6 +120,7 @@ void loop() {
 					lcd.print("Extending magnet");
 					inputState = 0;
 					modeState = 1;
+					motor_timeout = millis();
 
 					break;
 				}
@@ -128,9 +130,9 @@ void loop() {
 
 			break;
 		}
-		case 1: { // Motor extend modeState
+		case 1: { // Motor extend to allow magnet attachment
 			bool tooFarSwitch = digitalRead(1);
-			while(tooFarSwitch == false){
+			while((tooFarSwitch == false) && ((millis() - motor_timeout) < 10000)){
 				unsigned int startTime = micros();
 				unsigned int timeInterval = 1000;
 				while((micros() - startTime) < timeInterval){
@@ -157,6 +159,7 @@ void loop() {
 				lcd.setCursor(0, 1);
 				lcd.print("Retracting mag  ");
 				modeState = 3;
+				motor_timeout = millis();
 			}
 			else{
 				delay(1000);
@@ -165,9 +168,9 @@ void loop() {
 			break;
 		}
 
-		case 3: { // Motor retract for release
+		case 3: { // Motor retract for magnet release
 			bool tooCloseSwitch = digitalRead(0);
-			while(tooCloseSwitch == false){
+			while((tooCloseSwitch == false) && ((millis() - motor_timeout) < 10000)){
 				unsigned int startTime = micros();
 				unsigned int timeInterval = 1000;
 				while((micros() - startTime) < timeInterval){

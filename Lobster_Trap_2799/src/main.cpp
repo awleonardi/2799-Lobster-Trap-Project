@@ -35,7 +35,7 @@ void setup() {
     // initialize
 	lcd.init();
 	pinMode(8, INPUT);
-	pinMode(7, INPUT_PULLDOWN);
+	pinMode(0, INPUT_PULLDOWN);
 	pinMode(1, INPUT_PULLDOWN);
 	sw.attach(8);		// Attach rotary encoder switch to pin 8
 	sw.interval(25); 	// Set 25ms debounce interval
@@ -132,7 +132,6 @@ void loop() {
 			bool tooFarSwitch = digitalRead(1);
 			while(tooFarSwitch == false){
 				unsigned int startTime = micros();
-				unsigned int timeInterval = 1000;
 				while((micros() - startTime) < timeInterval){
 					motorSetEfforts(on, true);
 				}
@@ -169,7 +168,6 @@ void loop() {
 			bool tooCloseSwitch = digitalRead(0);
 			while(tooCloseSwitch == false){
 				unsigned int startTime = micros();
-				unsigned int timeInterval = 1000;
 				while((micros() - startTime) < timeInterval){
 					motorSetEfforts(on, false);
 				}
@@ -245,19 +243,12 @@ void motorSetEfforts(bool speed, bool clockwise) {
   }
 
   else{
-	  
 	digitalWrite(STEP, LOW);
-
     if (clockwise == true) {
-
       digitalWrite(DIR, HIGH);
-
     }
-
     if (clockwise == false) {
-
       digitalWrite(DIR, LOW);
-
     }
   }
 }
